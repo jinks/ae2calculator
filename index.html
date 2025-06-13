@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AE2 Cell Storage Calculator</title>
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --text-color: #000000;
+      --table-bg: #f0f0f0;
+      --card-bg: #ffffff;
+      --border-color: #ccc;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-color: #121212;
+        --text-color: #c0c0c0;
+        --table-bg: #1e1e1e;
+        --card-bg: #1a1a1a;
+        --border-color: #444;
+      }
+    }
+
+    body.dark {
+      --bg-color: #121212;
+      --text-color: #c0c0c0;
+      --table-bg: #1e1e1e;
+      --card-bg: #1a1a1a;
+      --border-color: #444;
+    }
+
+    body.light {
+      --bg-color: #ffffff;
+      --text-color: #000000;
+      --table-bg: #f0f0f0;
+      --card-bg: #ffffff;
+      --border-color: #ccc;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      padding: 2rem;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .container {
+      max-width: 900px;
+      background: var(--card-bg);
+      padding: 2rem;
+      margin: auto;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border: 1px solid var(--border-color);
+    }
+
+    h2, h3 {
+      text-align: center;
+    }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 1rem;
+    }
+
+    input[type=range] {
+      width: 100%;
+    }
+
+    .slider-value {
+      text-align: center;
+      margin-top: 0.5rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1.5rem;
+      font-size: 0.95rem;
+    }
+
+    th, td {
+      padding: 0.6rem;
+      text-align: center;
+      border: 1px solid var(--border-color);
+    }
+
+    th {
+      background-color: var(--table-bg);
+    }
+
+    .section {
+      margin-bottom: 3rem;
+    }
+
+    .mode-toggle {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 1rem;
+    }
+
+    .mode-toggle select {
+      padding: 0.4rem;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="mode-toggle">
+      <label>
+        Theme:
+        <select id="themeSelect">
+          <option value="auto">Auto</option>
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+        </select>
+      </label>
+    </div>
+
+    <h2>AE2 Cell Storage Calculator</h2>
+
+    <!-- Item Cells -->
+    <div class="section">
+      <h3>Item Cells</h3>
+      <label for="itemTypes">Number of Item Types (1–63):</label>
+      <input type="range" id="itemTypes" min="1" max="63" value="1" />
+      <div class="slider-value">Item Types: <span id="itemTypesValue">1</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Cell</th>
+            <th>Size (bytes)</th>
+            <th>Max Items</th>
+            <th>Items per Type</th>
+          </tr>
+        </thead>
+        <tbody id="itemResults"></tbody>
+      </table>
+    </div>
+
+    <!-- Fluid Cells -->
+    <div class="section">
+      <h3>Fluid Cells</h3>
+      <label for="fluidTypes">Number of Fluid Types (1–18):</label>
+      <input type="range" id="fluidTypes" min="1" max="18" value="1" />
+      <div class="slider-value">Fluid Types: <span id="fluidTypesValue">1</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Cell</th>
+            <th>Size (bytes)</th>
+            <th>Max Buckets</th>
+            <th>Buckets per Type</th>
+          </tr>
+        </thead>
+        <tbody id="fluidResults"></tbody>
+      </table>
+    </div>
+
+    <!-- Chemical Cells -->
+    <div class="section">
+      <h3>Chemical Cells</h3>
+      <label for="chemicalTypes">Number of Chemical Types (1–5):</label>
+      <input type="range" id="chemicalTypes" min="1" max="5" value="1" />
+      <div class="slider-value">Chemical Types: <span id="chemicalTypesValue">1</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Cell</th>
+            <th>Size (bytes)</th>
+            <th>Max Buckets</th>
+            <th>Buckets per Type</th>
+          </tr>
+        </thead>
+        <tbody id="chemicalResults"></tbody>
+      </table>
+    </div>
+
+    <p> * "per type" assumes equal distribution. (Duh) </p>
+
+  <script>
+    const cells = [
+      { name: '1k', size: 1024 },
+      { name: '4k', size: 4096 },
+      { name: '16k', size: 16384 },
+      { name: '64k', size: 65536 },
+      { name: '256k', size: 262144 },
+      { name: '1M (MEGA)', size: 1048576 },
+      { name: '4M (MEGA)', size: 4194304 },
+      { name: '16M (MEGA)', size: 16777216 },
+      { name: '64M (MEGA)', size: 67108864 },
+      { name: '256M (MEGA)', size: 268435456 }
+    ];
+
+    const itemSlider = document.getElementById('itemTypes');
+    const itemValue = document.getElementById('itemTypesValue');
+    const itemResults = document.getElementById('itemResults');
+
+    const fluidSlider = document.getElementById('fluidTypes');
+    const fluidValue = document.getElementById('fluidTypesValue');
+    const fluidResults = document.getElementById('fluidResults');
+
+    const chemicalSlider = document.getElementById('chemicalTypes');
+    const chemicalValue = document.getElementById('chemicalTypesValue');
+    const chemicalResults = document.getElementById('chemicalResults');
+
+    const themeSelect = document.getElementById('themeSelect');
+
+    function updateTable({ slider, valueDisplay, resultsContainer, maxTypes }) {
+      const numTypes = parseInt(slider.value);
+      valueDisplay.textContent = numTypes;
+      resultsContainer.innerHTML = '';
+
+      cells.forEach(cell => {
+        const overhead = 8 * (cell.size / 1024);
+        const used = numTypes * overhead;
+        const free = cell.size - used;
+
+        let max = free <= 0 ? 'No space' : Math.floor(free * 8);
+        let perType = free <= 0 ? '-' : Math.floor(max / numTypes);
+
+        resultsContainer.innerHTML += `
+          <tr>
+            <td>${cell.name}</td>
+            <td>${cell.size.toLocaleString()}</td>
+            <td>${isNaN(max) ? max : max.toLocaleString()}</td>
+            <td>${isNaN(perType) ? perType : perType.toLocaleString()}</td>
+          </tr>
+        `;
+
+        // Add spacer after 256k cell (vanilla vs mega)
+        if (cell.name === '256k') {
+          resultsContainer.innerHTML += `<tr style="height: 1rem;"><td colspan="4"></td></tr>`;
+        }
+      });
+    }
+
+    function applyTheme(theme) {
+      document.body.classList.remove('light', 'dark');
+      if (theme === 'light') {
+        document.body.classList.add('light');
+      } else if (theme === 'dark') {
+        document.body.classList.add('dark');
+      }
+    }
+
+    function detectSystemTheme() {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      applyTheme(prefersDark ? 'dark' : 'light');
+    }
+
+    // Event Listeners
+    itemSlider.addEventListener('input', () => updateTable({
+      slider: itemSlider,
+      valueDisplay: itemValue,
+      resultsContainer: itemResults,
+      maxTypes: 63
+    }));
+
+    fluidSlider.addEventListener('input', () => updateTable({
+      slider: fluidSlider,
+      valueDisplay: fluidValue,
+      resultsContainer: fluidResults,
+      maxTypes: 18
+    }));
+
+    chemicalSlider.addEventListener('input', () => updateTable({
+      slider: chemicalSlider,
+      valueDisplay: chemicalValue,
+      resultsContainer: chemicalResults,
+      maxTypes: 5
+    }));
+
+    themeSelect.addEventListener('change', () => {
+      const mode = themeSelect.value;
+      if (mode === 'auto') detectSystemTheme();
+      else applyTheme(mode);
+    });
+
+    // Initial Load
+    updateTable({ slider: itemSlider, valueDisplay: itemValue, resultsContainer: itemResults, maxTypes: 63 });
+    updateTable({ slider: fluidSlider, valueDisplay: fluidValue, resultsContainer: fluidResults, maxTypes: 18 });
+    updateTable({ slider: chemicalSlider, valueDisplay: chemicalValue, resultsContainer: chemicalResults, maxTypes: 5 });
+    detectSystemTheme();
+  </script>
+</body>
+</html>
+
